@@ -22,6 +22,22 @@ function(input, output, session) {
              Economic.Need.Index)
   })
   
+  box_reactive <- reactive({
+    demo %>%
+      filter(Year=='2019', demo[,input$sqr_category] == input$sqr_performance) %>%
+      group_by(DBN) %>%
+      select(DBN,White.,Black.,Hispanic.,Asian.) %>%
+      gather(key=demographic, value=percentage, 2:5, na.rm = TRUE)
+  })
+  
+  distribution_reactive <- reactive({
+    demo %>%
+      filter(Year=='2019') %>%
+      select(demo1 = input$demo1,
+             demo2 = input$demo2) %>%
+      gather(key=Demographic, value=Distribution, na.rm = TRUE)
+  })
+  
   # optionone = function() {
   #   demo %>%
   #   filter(Year=='2019') %>%
@@ -95,36 +111,30 @@ function(input, output, session) {
                                   input$demo2)) %>%
       ggplot(aes(x=Distribution, fill=Demographic)) +
       geom_density(alpha = .5)
-      
   )
   
-  output$boxPlot <- renderPlot(
+  output$anovaTest <- renderPrint (
+    var.test(distribution_reactive()$Distribution ~ distribution_reactive()$Demographic, alternative="two.sided")
+    #summary(aov(Distribution ~ Demographic, distribution_reactive()))
+  )
+  
+  output$boxPlot_dynamic <- renderPlot(
+   box_reactive() %>%
+      ggplot(aes(x=demographic,y=percentage)) +
+      geom_boxplot(aes(fill=demographic)) +
+     ggtitle("Filtered Subset of Schools")
+  )
+  
+  output$boxPlot_standard <- renderPlot(
     demo %>%
-      filter(Year=='2019', demo[,input$sqr_category] == input$sqr_performance) %>%
+      filter(Year=='2019') %>%
       group_by(DBN) %>%
       select(DBN,White.,Black.,Hispanic.,Asian.) %>%
       gather(key=demographic, value=percentage, 2:5, na.rm = TRUE) %>%
       ggplot(aes(x=demographic,y=percentage)) +
-      geom_boxplot(aes(fill=demographic))
-      # group_by(DBN) %>%
-      # gather(key=demographic, value=percentage,c('White.','Black.','Hispanic.','Asian.'), na.rm = TRUE) %>%
-      # ggplot(aes(x=demographic,y=percentage)) +
-      # geom_boxplot(aes(fill=demographic))
+      geom_boxplot(aes(fill=demographic)) +
+      ggtitle("Overall Representation of NYC Schools")
+    
   )
-
 }
-
-# demo %>%
-#   filter(Year=='2019' & Rigorous.Instruction.Rating=='Exceeding Target') %>%
-#   gather(key=demographic, value=percentage, c(White.,Black.,Hispanic.,Asian.), na.rm = TRUE) %>%
-#   ggplot(aes(x=demographic,y=percentage)) +
-#   geom_boxplot(aes(fill=demographic))
-
-# unique(d$demographic)
-
-# %>%
-#   group_by(DBN) %>%
-#   gather(key=demographic, value=percentage,c('White.','Black.','Hispanic.','Asian.'), na.rm = TRUE) %>%
-#   ggplot(aes(x=demographic,y=percentage)) +
-#   geom_boxplot(aes(fill=demographic))
-# 
+  

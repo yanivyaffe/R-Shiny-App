@@ -44,7 +44,8 @@ shinyUI(dashboardPage(
                            plotOutput("ENI")
                            ),
                   tabPanel("Density of Demographics", 
-                           plotOutput("density")))
+                           plotOutput("density"),
+                           verbatimTextOutput("anovaTest")))
                 )
               ),
       tabItem("map",
@@ -55,17 +56,18 @@ shinyUI(dashboardPage(
                 column(7, 
                        selectizeInput(inputId = "sqr_category",
                                label = "Select an SQR Category",
-                               choices = colnames(demo)[45:61]),
+                               choices = colnames(demo)[45:61],
+                               selected = "Supportive.Environment.Rating"),
                 selectizeInput(inputId = "sqr_performance",
                                label = "Select a grade for this SQR Category",
-                               choices = unique(demo[45]))
+                               choices = unique(demo[45]),
+                               selected = "Not Meeting Target")
                 )),
               fluidRow(
-                plotOutput("boxPlot")
+                column(6,plotOutput("boxPlot_dynamic")),
+                column(6,plotOutput("boxPlot_standard"))
               )
               )
     )
 )
 ))
-
-##literally anything

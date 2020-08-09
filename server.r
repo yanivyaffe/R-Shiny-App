@@ -3,6 +3,8 @@ library(ggplot2)
 library(dplyr)
 
 demo<-read.csv(file='~/Desktop/NYCDSA/R/Shiny_Project/App/demo.csv',stringsAsFactors = FALSE)
+demo = demo %>%
+  mutate(Scale = 1)
 
 function(input, output, session) {
   
@@ -15,11 +17,12 @@ function(input, output, session) {
 
   demo_reactive <- reactive({
     demo %>%
-      filter(Year=='2019') %>%
-      group_by(DBN) %>%
+      # filter(Year=='2019') %>%
+      # group_by(DBN) %>%
       select(demo1 = input$demo1,
              demo2 = input$demo2,
-             Economic.Need.Index)
+             Economic.Need.Index,
+             Scale)
   })
   
   box_reactive <- reactive({
@@ -68,12 +71,13 @@ function(input, output, session) {
   # output$scatterPlot <- renderPlot(
   #   ifelse(input$EconData,
   #          optiontwo(),
-  #          optionone())
+  #          optionone())  
   #)
   output$scatterPlot <- renderPlot(
     demo_reactive() %>%
       ggplot(aes(x=demo1, y=demo2)) +
-      geom_point() +
+      geom_point(aes(color= demo[,input$EconData], alpha=.5)) +
+      scale_color_gradient(low='yellow',high='red') +
       xlab(input$demo1) +
       ylab(input$demo2)
   )
@@ -137,4 +141,13 @@ function(input, output, session) {
     
   )
 }
-  
+
+# demo %>%
+#   filter(Year=='2019') %>%
+#   group_by(DBN) %>%
+#   select(White.,
+#          Black.,
+#          Economic.Need.Index,) %>%
+#   mutate(Scale = 1) %>%
+#   ggplot(aes(x=White.,y=Black.)) +
+#   geom_point(aes(color=Scale))

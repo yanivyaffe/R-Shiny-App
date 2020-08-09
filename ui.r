@@ -30,9 +30,13 @@ shinyUI(dashboardPage(
                                label="",
                                choices = colnames(demo)[seq(25,39,2)],
                                selected = 'Black.'),
-                checkboxInput("EconData", 
-                              label = "Overlay Economic Need Index", 
-                              value = FALSE)
+                radioButtons("EconData", label = "Overlay Economic Need Index:",
+                             choices = list("On" = "Economic.Need.Index",
+                                            "Off" = "Scale"), 
+                             selected = "Scale")
+                # checkboxInput("EconData", 
+                #               label = "Overlay Economic Need Index", 
+                #               value = FALSE)
                 )),
               
               # Show a tabset 1) scatter plot of demographics where each point is a school in NYC
@@ -50,7 +54,7 @@ shinyUI(dashboardPage(
               ),
       tabItem("map",
               h2("Map of NYC Public Schools")),
-      tabItem("t_test",
+      tabItem("School Performance",
               h2("Test for yourself if school performance varies by racial representation at school:"),
               fluidRow(
                 column(7, 
@@ -58,7 +62,7 @@ shinyUI(dashboardPage(
                                label = "Select an SQR Category",
                                choices = colnames(demo)[45:61],
                                selected = "Supportive.Environment.Rating"),
-                selectizeInput(inputId = "sqr_performance",
+                       selectizeInput(inputId = "sqr_performance",
                                label = "Select a grade for this SQR Category",
                                choices = unique(demo[45]),
                                selected = "Not Meeting Target")
@@ -71,3 +75,10 @@ shinyUI(dashboardPage(
     )
 )
 ))
+
+#unique(demo$Rigorous.Instruction.Rating)
+# unique(demo$How.well.are.school.decisions.evaluated.and.adjusted)
+# 
+# demo2 = gsub("Proficient",4,demo)
+# demo2
+# unique(demo2$How.well.are.school.decisions.evaluated.and.adjusted)

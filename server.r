@@ -3,10 +3,10 @@ library(ggplot2)
 library(dplyr)
 
 demo<-read.csv(file='~/Desktop/NYCDSA/R/Shiny_Project/App/demo.csv',stringsAsFactors = FALSE)
-demo = demo %>%
-  mutate(Scale = 1)
 
 function(input, output, session) {
+  
+  ##Update options for boxplot:
   
   observe({
     updateSelectizeInput(
@@ -15,98 +15,50 @@ function(input, output, session) {
   )
   })
 
+  ##Reactives for plots
+  
   demo_reactive <- reactive({
     demo %>%
-      # filter(Year=='2019') %>%
-      # group_by(DBN) %>%
       select(demo1 = input$demo1,
              demo2 = input$demo2,
              Economic.Need.Index,
-             Scale)
+             dummy)
   })
   
   box_reactive <- reactive({
     demo %>%
-      filter(Year=='2019', demo[,input$sqr_category] == input$sqr_performance) %>%
-      group_by(DBN) %>%
+      filter(demo[,input$sqr_category] == input$sqr_performance) %>%
       select(DBN,White.,Black.,Hispanic.,Asian.) %>%
       gather(key=demographic, value=percentage, 2:5, na.rm = TRUE)
   })
   
   distribution_reactive <- reactive({
     demo %>%
-      filter(Year=='2019') %>%
       select(demo1 = input$demo1,
              demo2 = input$demo2) %>%
       gather(key=Demographic, value=Distribution, na.rm = TRUE)
   })
-  
-  # optionone = function() {
-  #   demo %>%
-  #   filter(Year=='2019') %>%
-  #   group_by(DBN) %>%
-  #   select(demo1 = input$demo1,
-  #          demo2 = input$demo2,
-  #          Economic.Need.Index) %>%
-  #       ggplot(aes(x=demo1, y=demo2)) +
-  #       geom_point() +
-  #       xlab(input$demo1) +
-  #       ylab(input$demo2)
-  # }
-  # 
-  # optiontwo = function() {
-  #   demo %>%
-  #   filter(Year=='2019') %>%
-  #   group_by(DBN) %>%
-  #   select(demo1 = input$demo1,
-  #          demo2 = input$demo2,
-  #          Economic.Need.Index) %>%
-  #       ggplot(aes(x=demo1, y=demo2)) +
-  #       geom_point(aes(color=Economic.Need.Index)) +
-  #       scale_color_gradient(low='yellow',high='red') +
-  #       xlab(input$demo1) +
-  #       ylab(input$demo2)
-  # }
-  # 
-  # output$scatterPlot <- renderPlot(
-  #   ifelse(input$EconData,
-  #          optiontwo(),
-  #          optionone())  
-  #)
-  output$scatterPlot <- renderPlot(
-    demo_reactive() %>%
-      ggplot(aes(x=demo1, y=demo2)) +
-      geom_point(aes(color= demo[,input$EconData], alpha=.5)) +
-      scale_color_gradient(low='yellow',high='red') +
-      xlab(input$demo1) +
-      ylab(input$demo2)
-  )
-  output$ENI <- renderPlot(
-    demo_reactive() %>%
-      ggplot(aes(x=demo1, y=demo2)) +
-      geom_point(aes(color=Economic.Need.Index)) +
-      scale_color_gradient(low='yellow',high='red') +
-      xlab(input$demo1) +
-      ylab(input$demo2)
-  )
 
-  #   observeEvent(input$EconData, {
-  #     proxy <- output$scatterPlot
-  #   if(input$EconData) {
-  #     proxy %>%
-  #       geom_point(aes(color=Economic.Need.Index)) +
-  #       scale_color_gradient(low='yellow',high='red') +
-  #       xlab(input$demo1) +
-  #       ylab(input$demo2)
-  #   }
-  #   else {
-  #       proxy
-  #   }
-  # })
+  
+  ###Output Plots
+  
+  
+  output$scatterPlot <- renderPlot(
+    demo %>%
+      select(demo1 = input$demo1,
+             demo2 = input$demo2,
+             Economic.Need.Index,
+             dummy) %>%
+      ggplot(aes(x=demo1, y=demo2)) +
+      geom_point(aes(color= demo[,input$EconData])) +
+      scale_color_gradient(low='yellow',high='red',name="Economic Need Index") +
+      xlab(input$demo1) +
+      ylab(input$demo2)
+      
+  )
   
   output$density <- renderPlot(
     demo %>%
-      filter(Year=='2019') %>%
       select(demo1 = input$demo1,
              demo2 = input$demo2) %>%
       gather(key=Demographic, value=Distribution, na.rm = TRUE) %>%
@@ -117,7 +69,7 @@ function(input, output, session) {
       geom_density(alpha = .5)
   )
   
-  output$anovaTest <- renderPrint (
+  output$FTest <- renderPrint (
     var.test(distribution_reactive()$Distribution ~ distribution_reactive()$Demographic, alternative="two.sided")
     #summary(aov(Distribution ~ Demographic, distribution_reactive()))
   )
@@ -126,28 +78,31 @@ function(input, output, session) {
    box_reactive() %>%
       ggplot(aes(x=demographic,y=percentage)) +
       geom_boxplot(aes(fill=demographic)) +
-     ggtitle("Filtered Subset of Schools")
+      ggtitle("Filtered Subset of Schools") +
+      ylim(0,1) + 
+      xlab("Demographic") +
+      ylab("Percentage") + 
+      theme(plot.title = element_text(hjust = 0.5))
   )
   
   output$boxPlot_standard <- renderPlot(
     demo %>%
-      filter(Year=='2019') %>%
-      group_by(DBN) %>%
       select(DBN,White.,Black.,Hispanic.,Asian.) %>%
       gather(key=demographic, value=percentage, 2:5, na.rm = TRUE) %>%
       ggplot(aes(x=demographic,y=percentage)) +
       geom_boxplot(aes(fill=demographic)) +
-      ggtitle("Overall Representation of NYC Schools")
-    
+      ggtitle("Overall Representation of NYC Schools") + 
+      xlab("Demographic") +
+      ylab("Percentage") + 
+      theme(plot.title = element_text(hjust = 0.5))
   )
+  
 }
 
 # demo %>%
-#   filter(Year=='2019') %>%
-#   group_by(DBN) %>%
 #   select(White.,
 #          Black.,
-#          Economic.Need.Index,) %>%
-#   mutate(Scale = 1) %>%
+#          Economic.Need.Index,
+#          dummy) %>%
 #   ggplot(aes(x=White.,y=Black.)) +
-#   geom_point(aes(color=Scale))
+#   geom_point(color=demo$dummy)
